@@ -43,6 +43,9 @@
   <header class="top">
     <div class="wrap">
       <a class="brand" href="./"><img src="logo.png" alt="" width="32" height="32"><span>מובידוס</span></a>
+      <!-- the forum's account, on the right beside the logo (the owner, 4.10.2026): "כניסה" for a visitor; for a member
+           board.js draws the bell and the account's menu -->
+      <div class="top__user" id="user"><button type="button" class="btn btn-quiet" data-act="auth" data-tab="login">כניסה</button></div>
       <nav class="nav" aria-label="ניווט ראשי">
         <a href="./#info-section">מידע</a>
         <a href="./#features">תכונות</a>
@@ -51,8 +54,6 @@
         <a href="forum.html" aria-current="true">פורום</a>
         <a href="./#contact-section">צור קשר</a>
       </nav>
-      <!-- the forum's account: "כניסה" for a visitor; for a member board.js draws the bell and the account's menu -->
-      <div class="top__user" id="user"><button type="button" class="btn btn-quiet" data-act="auth" data-tab="login">כניסה</button></div>
       <a class="btn btn-primary" href="./#downloads">
         <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>הורדה
       </a>
