@@ -37,6 +37,7 @@
   var API = address ? address.replace(/\/+$/, "") : null;      // "" = this very origin, null = not set up
   var OWNER = /[?&]owner=1/.test(location.search);        // the owner's own sign-up: shows the owner-code field
   var TOKEN = "mv-board-token", MEMORY = "mv-board-memory";
+  var KNOWN = "mv-board-known";       // this browser had a signed-in member once: "כניסה / הרשמה" opens on "כניסה" (kept after signing out)
   var TITLE = document.title;
   var MIN = 60000, HOUR = 60 * MIN, DAY = 24 * HOUR;
   var KINDS = { idea: "רעיון", question: "שאלה", bug: "תקלה" };
@@ -496,6 +497,7 @@
   /* ---------- who is signed in ---------- */
   function took(data) {
     state.me = data.user;
+    store.set(KNOWN, "1");
     state.notes = data.notes || [];
     state.unseen = data.unseen || 0;
     state.waiting = data.waiting || 0;
@@ -546,6 +548,8 @@
     var el = document.getElementById("user"), board = document.getElementById("board");
     if (board) { board.setAttribute("data-me", state.me ? "1" : ""); }
     el.removeAttribute("data-pending");                // site.js hides the top bar's "כניסה" of a member until this script knows him
+    // what the site offers only a visitor ("הרשמה" beside "לפורום"; site.css .for-visitors) goes away for a member
+    if (state.me) { document.documentElement.setAttribute("data-member", ""); } else { document.documentElement.removeAttribute("data-member"); }
     if (!state.me) { el.innerHTML = GUEST; return; }
     var me = state.me, unseen = state.unseen, waiting = isMod() ? state.waiting : 0;
     el.innerHTML = '<button type="button" class="ib" data-act="bell" aria-haspopup="true" aria-expanded="false" title="התראות" aria-label="התראות' +
@@ -876,10 +880,14 @@
     if (ui.modal === "auth") { ui.authName = value("auth-name"); ui.authMail = value("auth-mail") || ui.authMail; if (box) { ui.authNotify = box.checked; } }      // switching tabs keeps what was typed
     else { ui.authNote = note || ""; ui.authName = ""; ui.authMail = ""; ui.authNotify = true; }
     closeFloat();
+    // the top bar's "כניסה / הרשמה": the tab this browser most likely wants - "כניסה" where a member was signed in before
+    if (tab === "auto") { tab = store.get(KNOWN) ? "login" : "register"; }
     ui.authTab = tab || "login";
     ui.modal = "auth";
     renderModal();
   }
+  /** A new account: welcomed - and on another page of the site, offered the way to the forum. */
+  function greet() { toast("נרשמתם. ברוכים הבאים!", FORUM ? null : ["to-forum", "לפורום"]); }
   function openCompose() {
     closeFloat();
     ui.modal = "compose";
@@ -1753,7 +1761,7 @@
       busy(form, function () {
         return api("POST", "/auth/register/verify", { ticket: ui.signup.ticket, code: value("signup-code"), notify: ui.authNotify }).then(function (data) {
           ui.signup = null;
-          toast("נרשמתם. ברוכים הבאים!");
+          greet();
           return signedIn(data);
         });
       });
@@ -1770,7 +1778,8 @@
     "google-name": function (form) {
       var keep = document.getElementById("g-keep");
       busy(form, function () {
-        return api("POST", "/auth/google", ownerCode({ credential: ui.credential, name: value("g-name"), keepMail: !!(keep && keep.checked) })).then(signedIn);
+        return api("POST", "/auth/google", ownerCode({ credential: ui.credential, name: value("g-name"), keepMail: !!(keep && keep.checked) }))
+          .then(function (data) { greet(); return signedIn(data); });        // a new account through Google
       });
     },
     topic: function (form) {
@@ -1869,6 +1878,7 @@
 
   var acts = {
     auth: function (el) { openAuth(el.getAttribute("data-tab")); },
+    "to-forum": function () { location.href = FORUM_PAGE || "forum.html"; },      // the welcome of a new account, on another page
     close: closeModal,
     backdrop: function (el, event) { if (event.target === el || event.target.classList.contains("lb-stage")) { closeModal(); } },
     bell: function (el) { openFloat("bell", el, bellPanel(), "notes"); },

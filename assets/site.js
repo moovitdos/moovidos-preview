@@ -684,17 +684,49 @@
     try { member = !!localStorage.getItem(BOARD_SESSION); } catch (e) { /* storage blocked: a visitor */ }
     if (member) {
       box.setAttribute('data-pending', '');            // not "כניסה" for a moment: board.js draws his bell and menu
+      document.documentElement.setAttribute('data-member', '');      // nor what only a visitor is offered (board.js corrects both)
       loadBoard().catch(function () { box.removeAttribute('data-pending'); });
     }
-    box.addEventListener('click', function (event) {
+    // "כניסה / הרשמה" in the top bar, "הרשמה" in the forum's strip: the forum's dialog, its script loaded first.
+    // The button is left as it is while that loads (board.js keeps a copy of the top bar's markup as it finds it -
+    // a disabled one came back disabled after signing out); a second press waits for the same load.
+    var opening = null;
+    document.addEventListener('click', function (event) {
       var button = event.target.closest('[data-act="auth"]');
       if (!button || window.MoovidosBoard) return;     // once the forum's script is here, it answers by itself
-      button.disabled = true;
+      if (opening) return;
+      opening = button.getAttribute('data-tab');
       loadBoard().then(function () {
-        button.disabled = false;
-        window.MoovidosBoard.auth(button.getAttribute('data-tab'));
-      }, function () { button.disabled = false; });
+        window.MoovidosBoard.auth(opening);
+        opening = null;
+      }, function () { opening = null; });
     });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * A one-time message: what is new on the site (#news in index.html)
+   * Shown once per browser, a moment after the page: once it has appeared it is not shown again (its id is kept).
+   * A browser that keeps nothing is not shown it at all - it could not stay "once" there.
+   * ------------------------------------------------------------------ */
+
+  var NEWS_SEEN = 'mv-site-news';
+  function wireNews() {
+    var card = byId('news');
+    if (!card) return;
+    var id = card.getAttribute('data-news');
+    try { if (localStorage.getItem(NEWS_SEEN) === id) return; } catch (e) { return; }
+    function close() { card.hidden = true; document.removeEventListener('keydown', onKey); }
+    function onKey(event) {          // Escape closes it - unless a dialog or the screenshot viewer is the one in front
+      if (event.key === 'Escape' && !document.querySelector('#modal .dialog, [data-lightbox].is-open')) close();
+    }
+    card.addEventListener('click', function (event) {
+      if (event.target.closest('[data-news-close], [data-news-done]')) close();
+    });
+    setTimeout(function () {
+      card.hidden = false;
+      try { localStorage.setItem(NEWS_SEEN, id); } catch (e) { /* shown once in this visit anyway */ }
+      document.addEventListener('keydown', onKey);
+    }, 1800);
   }
 
   /* ------------------------------------------------------------------ */
@@ -702,6 +734,7 @@
   function boot() {
     wireNav();
     wireAccount();
+    wireNews();
     wireViewer();
     wireShots();
     loadReleases();

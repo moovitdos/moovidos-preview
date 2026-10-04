@@ -54,6 +54,7 @@
   <div role="note" style="background:#FFF4E5;color:#5C3A00;font:14px/1.6 Rubik,system-ui,sans-serif;text-align:center;padding:4px 16px">אתר ניסיון — <a href="https://moovitdos.github.io/moovidos/" style="color:inherit;text-decoration:underline">האתר הרשמי כאן</a></div>
   <svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
     <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c1.3-3.6 4.2-5.6 7.5-5.6s6.2 2 7.5 5.6"/></symbol>
     <symbol id="i-phone" viewBox="0 0 24 24"><path d="M21 16.4v2.9a1.9 1.9 0 0 1-2.1 1.9 18.9 18.9 0 0 1-8.2-2.9 18.6 18.6 0 0 1-5.7-5.7A18.9 18.9 0 0 1 2.1 4.3 1.9 1.9 0 0 1 4 2.2h2.9a1.9 1.9 0 0 1 1.9 1.6c.12.9.34 1.8.66 2.7a1.9 1.9 0 0 1-.43 2L7.8 9.7a15.2 15.2 0 0 0 5.7 5.7l1.2-1.2a1.9 1.9 0 0 1 2-.43c.87.32 1.77.54 2.7.66a1.9 1.9 0 0 1 1.6 1.93z"/></symbol>
     <symbol id="i-android" viewBox="0 0 24 24"><path d="M5 17.5a7 7 0 0 1 14 0z"/><path d="M8 7.5L6.6 5M16 7.5l1.4-2.5"/><path d="M9.4 13.4h.01M14.6 13.4h.01"/></symbol>
     <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4.5" rx="1"/><path d="M5 8.5V19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8.5M10 12.5h4"/></symbol>
@@ -78,10 +79,10 @@
   <header class="top">
     <div class="wrap">
       <a class="brand" href="#home"><img src="logo.png" alt="" width="32" height="32"><span>מובידוס</span></a>
-      <!-- the forum's account, on the right beside the logo (the owner, 4.10.2026): "כניסה" for a visitor; for a member
+      <!-- the forum's account, on the right beside the logo (the owner, 4.10.2026): "כניסה / הרשמה" for a visitor (it opens on the tab this browser most likely wants); for a member
            board.js draws the bell and the account's menu.
            site.js loads the forum's script only for a member, or when "כניסה" is pressed (wireAccount). -->
-      <div class="top__user" id="user"><button type="button" class="btn btn-quiet" data-act="auth" data-tab="login">כניסה</button></div>
+      <div class="top__user" id="user"><button type="button" class="btn btn-quiet account-btn" data-act="auth" data-tab="auto" aria-label="כניסה / הרשמה"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><span>כניסה / הרשמה</span></button></div>
       <nav class="nav" aria-label="ניווט ראשי">
         <a href="#info-section">מידע</a>
         <a href="#features">תכונות</a>
@@ -387,7 +388,11 @@
             <h3 id="forum-invite-title">יש לכם רעיון, שאלה או תקלה?</h3>
             <p>בפורום של מובידוס מציעים רעיונות לאפליקציה, שואלים ומדווחים על תקלות, ותומכים ברעיונות של אחרים.</p>
           </div>
-          <a class="btn btn-primary" href="forum.html">לפורום</a>
+          <div class="notify__actions">
+            <a class="btn btn-primary" href="forum.html">לפורום</a>
+            <!-- a visitor only ([data-member] on <html>: site.js / board.js) -->
+            <button type="button" class="btn btn-quiet for-visitors" data-act="auth" data-tab="register">הרשמה</button>
+          </div>
         </aside>
       </div>
     </section>
@@ -441,6 +446,19 @@
     <button type="button" class="lb-btn lb-prev" data-lightbox-prev aria-label="הצילום הקודם"><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
     <button type="button" class="lb-btn lb-next" data-lightbox-next aria-label="הצילום הבא"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
   </div>
+
+  <!-- a one-time message (the owner, 4.10.2026): what is new on the site. site.js wireNews shows it once per browser,
+       by its data-news id - a new message gets a new id. Hidden until then, and for good once it has been seen. -->
+  <aside class="news" id="news" data-news="forum-mail-2026-10" aria-labelledby="news-title" hidden>
+    <button type="button" class="news__close" data-news-close aria-label="סגירה"><svg class="ic" aria-hidden="true"><use href="#i-close"/></svg></button>
+    <p class="news__eyebrow">חדש באתר</p>
+    <h2 id="news-title">פורום מובידוס ועדכונים במייל</h2>
+    <p>בפורום מציעים רעיונות לאפליקציה, שואלים ומדווחים על תקלות. ומי שרוצה, מקבל מייל קצר על כל גרסה חדשה.</p>
+    <div class="news__actions">
+      <a class="btn btn-primary" href="forum.html" data-news-done>לפורום</a>
+      <a class="btn btn-quiet" href="#updates" data-news-done>לעדכונים במייל</a>
+    </div>
+  </aside>
 
   <!-- the forum's menus, dialogs and messages, when it is used from this page (assets/board.js) -->
   <div id="float"></div>

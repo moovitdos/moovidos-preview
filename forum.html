@@ -36,6 +36,7 @@
        assets/board-icons.svg -->
   <svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
     <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c1.3-3.6 4.2-5.6 7.5-5.6s6.2 2 7.5 5.6"/></symbol>
   </svg>
 
   <a href="#view" class="skip-link">דלג לדיונים</a>
@@ -43,9 +44,9 @@
   <header class="top">
     <div class="wrap">
       <a class="brand" href="./"><img src="logo.png" alt="" width="32" height="32"><span>מובידוס</span></a>
-      <!-- the forum's account, on the right beside the logo (the owner, 4.10.2026): "כניסה" for a visitor; for a member
+      <!-- the forum's account, on the right beside the logo (the owner, 4.10.2026): "כניסה / הרשמה" for a visitor (it opens on the tab this browser most likely wants); for a member
            board.js draws the bell and the account's menu -->
-      <div class="top__user" id="user"><button type="button" class="btn btn-quiet" data-act="auth" data-tab="login">כניסה</button></div>
+      <div class="top__user" id="user"><button type="button" class="btn btn-quiet account-btn" data-act="auth" data-tab="auto" aria-label="כניסה / הרשמה"><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg><span>כניסה / הרשמה</span></button></div>
       <nav class="nav" aria-label="ניווט ראשי">
         <a href="./#info-section">מידע</a>
         <a href="./#features">תכונות</a>
