@@ -386,6 +386,7 @@
     if ("me" in params) { return { view: "account" }; }
     if ("saved" in params) { return { view: "saved" }; }
     if ("admin" in params) { return { view: "admin" }; }
+    if ("privacy" in params) { return { view: "privacy" }; }
     return {
       view: "list", kind: KINDS[params.k] ? params.k : "", tag: params.tag || "",
       filter: ["unread", "watching", "mine"].indexOf(params.f) !== -1 ? params.f : "",
@@ -469,6 +470,8 @@
       work = Promise.all([api("GET", "/me/account"), api("GET", "/me/avatar")]).then(function (got) { state.account = got[0]; ui.ownAvatar = got[1]; return pushState(); });
     } else if (route.view === "admin") {
       work = api("GET", "/admin/queue").then(function (data) { state.queue = data; });
+    } else if (route.view === "privacy") {
+      work = Promise.resolve();                 // the page's own text (#privacy-text in forum.html): nothing to ask
     } else {
       work = loadList(route).then(function () { ui.listHash = listHash(route); });
     }
@@ -674,7 +677,8 @@
     var google = tab === "reset" || !state.config.google ? "" :
       '<div class="or"><span>או</span></div><div class="gsi" id="gsi"></div>' +
       '<p class="dialog__fine">בכניסה עם Google לא נשמר אצלנו דבר מהחשבון, מלבד סימנים מוצפנים שמזהים אותו. כתובת המייל עצמה נשמרת רק אם תבחרו לקבל מיילים.</p>';
-    return '<h2 id="dialog-title">' + title + "</h2>" + (lede ? '<p class="dialog__text">' + esc(lede) + "</p>" : "") + tabs + form + google;
+    var privacy = '<p class="dialog__fine"><a href="' + FORUM_PAGE + '#privacy">מה נשמר עליכם ולמה: פרטיות</a></p>';
+    return '<h2 id="dialog-title">' + title + "</h2>" + (lede ? '<p class="dialog__text">' + esc(lede) + "</p>" : "") + tabs + form + google + privacy;
   }
   /** The second step of a sign-up: the code that was mailed to the address. */
   function signupModal() {
@@ -1547,7 +1551,7 @@
     if (arrived && !document.hidden) { requestAnimationFrame(function () { view.classList.add("view--in"); }); }
     document.getElementById("board").setAttribute("data-view", ui.view);
     document.body.classList.toggle("has-dock", ui.view === "topic");      // the snackbar rises above the reply bar
-    document.title = ui.view === "topic" ? state.current.topic.title + " - מובידוס" : TITLE;
+    document.title = ui.view === "topic" ? state.current.topic.title + " - מובידוס" : ui.view === "privacy" ? "פרטיות - מובידוס" : TITLE;
     if (ui.view === "list") { view.innerHTML = listView(); }
     else if (ui.view === "topic") { view.innerHTML = topicView(); setTimeout(reached, 300); }
     else if (ui.view === "search") { view.innerHTML = searchView(); }
@@ -1555,6 +1559,9 @@
     else if (ui.view === "user") { view.innerHTML = userView(); }
     else if (ui.view === "account") { view.innerHTML = accountView(); }
     else if (ui.view === "admin") { view.innerHTML = adminView(); }
+    else if (ui.view === "privacy") {        // what the forum keeps and why: the text of forum.html's #privacy-text
+      view.innerHTML = '<div class="narrow">' + pageHead("פרטיות") + '<div class="prose">' + document.getElementById("privacy-text").innerHTML + "</div></div>";
+    }
     else if (ui.view === "missing") {
       view.innerHTML = '<div class="narrow">' + pageHead("לא נמצא") + '<div class="empty"><span class="empty__icon">' + icon("search") + "</span><h2>לא נמצא</h2><p>" + ERRORS.not_found + "</p></div></div>";
     } else if (ui.view === "failed") {
