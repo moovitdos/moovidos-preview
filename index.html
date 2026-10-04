@@ -10,6 +10,12 @@
   <meta name="keywords" content="מובידוס, תחבורה ציבורית, סים כשר, אפליקציה כשרה, זמני אוטובוסים, קווים, חרדים, Moovitdos">
   <meta name="robots" content="noindex, nofollow">
   <meta name="author" content="Moovitdos">
+  <!-- the forum's API (cloud/board): signing in and the bell in the top bar (assets/board.js; forum.html has the same) -->
+  <meta name="board-api" content="https://moovidos-board.moovitdos.workers.dev">
+  <!-- What this page may load and talk to. The forum's script runs here too (the account in the top bar), so a new
+       address the page talks to is added here as well: GitHub (the releases, the guide), the forum's API, Google's
+       sign-in, the contact form. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src https://fonts.gstatic.com; img-src 'self' data: blob: http://localhost:8787 https://moovidos-board.moovitdos.workers.dev; connect-src 'self' https://api.github.com https://raw.githubusercontent.com http://localhost:8787 https://moovidos-board.moovitdos.workers.dev https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; worker-src 'self'; base-uri 'self'; form-action https://formspree.io">
   <link rel="canonical" href="https://moovitdos.github.io/moovidos/">
 
   <meta property="og:title" content="מובידוס - אפליקציית התחבורה הציבורית לבעלי סים כשר">
@@ -80,6 +86,9 @@
         <a href="forum.html">פורום</a>
         <a href="#contact-section">צור קשר</a>
       </nav>
+      <!-- the forum's account: "כניסה" for a visitor; for a member board.js draws the bell and the account's menu.
+           site.js loads the forum's script only for a member, or when "כניסה" is pressed (wireAccount). -->
+      <div class="top__user" id="user"><button type="button" class="btn btn-quiet" data-act="auth" data-tab="login">כניסה</button></div>
       <a class="btn btn-primary" href="#downloads">
         <svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>הורדה
       </a>
@@ -431,6 +440,11 @@
     <button type="button" class="lb-btn lb-prev" data-lightbox-prev aria-label="הצילום הקודם"><svg class="ic" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
     <button type="button" class="lb-btn lb-next" data-lightbox-next aria-label="הצילום הבא"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
   </div>
+
+  <!-- the forum's menus, dialogs and messages, when it is used from this page (assets/board.js) -->
+  <div id="float"></div>
+  <div id="modal"></div>
+  <div class="snack" id="toast" role="status" aria-live="polite"></div>
 </body>
 
 </html>

@@ -5,13 +5,19 @@
    dialogs and a snackbar - and the "grouped list" of the Android app itself (rows of one group: 20px corners
    at the group's ends, 4px between its rows, 2px apart). What stands out does so by the colour of its
    container, never by a coloured line. A press answers with ink (board.js), a new place slides in.
-   The neutral roles are the site's own tokens, so the board sits in the site's top bar and footer without a
-   seam; the typeface is Google Sans, on this page only. Icons: Material Symbols (the sprite of forum.html). */
+   The neutral roles are the site's own tokens, so the board sits between the site's top bar and footer without a
+   seam. The top bar and the footer are the site's own, in its typeface (Rubik) - also here; the forum, its menus
+   and its dialogs are in Google Sans. Icons: Material Symbols (assets/board-icons.svg).
+   The site's other pages load this sheet too, with board.js, for the account in their top bar (site.js). */
 
-:root {
-  /* the typeface of this page, its top bar and footer included (forum.html loads it; the site itself is Rubik) */
+/* the typeface of the forum: what is in it, and its menus, dialogs and messages, wherever they open (forum.html and
+   site.js load it). The top bar and the footer stay the site's (Rubik). */
+.board, #float, #modal, #toast, .pill {
   --display: "Google Sans", "Rubik", "Segoe UI", Arial, sans-serif;
   --body: "Google Sans", "Rubik", "Segoe UI", Arial, sans-serif;
+  font-family: var(--body);
+}
+:root {
   /* colour roles. primary = the site's blue; tertiary = the logo's orange (the developer, problems);
      purple = questions; green = what is done. Tones by Material's own colour utilities (HCT). */
   --md-primary: #1565C0; --md-on-primary: #FFFFFF;
@@ -27,7 +33,6 @@
   --md-card: var(--surface);              /* what lies on it: rows, cards, dialogs, menus */
   --md-fill: #EEF1F6;                     /* a tonal fill inside a card */
   --md-fill-high: #E2E7EF;
-  --md-bar: #E8ECF3;                      /* the top bar, once the page has scrolled under it */
   --md-tertiary-surface: #FFF4EC;         /* the card of a message the developer wrote */
   --md-green-surface: #ECFBF0;            /* the card of the message that answers */
   --md-on-surface: var(--ink);
@@ -55,7 +60,7 @@
     --md-error-container: #93000A; --md-on-error-container: #FFDAD6;
     --md-purple: #CEBDFF; --md-purple-container: #4F2EA1; --md-on-purple-container: #E8DDFF;
     --md-green: #80D99D; --md-green-container: #00522B; --md-on-green-container: #9CF6B7;
-    --md-fill: #1D2531; --md-fill-high: #283243; --md-bar: #161D28;
+    --md-fill: #1D2531; --md-fill-high: #283243;
     --md-tertiary-surface: #2A211B; --md-green-surface: #12291F;
     --md-outline: #8E9099;
     --md-inverse-surface: #E2E2E9; --md-inverse-on-surface: #2E3036; --md-inverse-primary: #1565C0;
@@ -76,7 +81,7 @@
   --md-error-container: #93000A; --md-on-error-container: #FFDAD6;
   --md-purple: #CEBDFF; --md-purple-container: #4F2EA1; --md-on-purple-container: #E8DDFF;
   --md-green: #80D99D; --md-green-container: #00522B; --md-on-green-container: #9CF6B7;
-  --md-fill: #1D2531; --md-fill-high: #283243; --md-bar: #161D28;
+  --md-fill: #1D2531; --md-fill-high: #283243;
   --md-tertiary-surface: #2A211B; --md-green-surface: #12291F;
   --md-outline: #8E9099;
   --md-inverse-surface: #E2E2E9; --md-inverse-on-surface: #2E3036; --md-inverse-primary: #1565C0;
@@ -234,20 +239,10 @@ a.who:hover { text-decoration: underline; }
 .facelink .avatar { transition: box-shadow .2s var(--ease); }
 .facelink:hover .avatar { box-shadow: 0 0 0 4px var(--md-fill-high); }
 
-/* ---------- the top bar, on this page: no line under it; it takes a tone once the page scrolls under it ---------- */
-.top { border-bottom-color: transparent; transition: background-color .2s var(--ease); }
-.is-scrolled .top { background: var(--md-bar); }
-
-/* ---------- the account, in the top bar ---------- */
-.top__user { display: flex; align-items: center; gap: 4px; }
-.top__user .mb { height: 36px; }
+/* ---------- the account, in the site's top bar (its place and the visitor's "כניסה" are the site's: site.css) ---------- */
 .me { display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; position: relative; }
 .me:hover { background: var(--md-fill-high); }
 .me .counter { position: absolute; top: 2px; left: 0; box-shadow: 0 0 0 2px var(--md-surface); }
-@media (max-width: 860px) {
-  .top .nav { display: none; }
-  .top__user { margin-inline-start: auto; }
-}
 
 /* ---------- loading: a thin line under the top bar ---------- */
 .progress { position: sticky; top: 64px; z-index: 19; height: 3px; margin-top: -20px; margin-bottom: 17px; overflow: hidden; background: var(--md-secondary-container); }

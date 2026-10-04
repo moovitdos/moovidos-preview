@@ -18,9 +18,14 @@
 (function () {
   "use strict";
 
+  // The forum page (forum.html), or another page of the site, where only the account in the top bar is the board's:
+  // signing in, the bell, the account's menu (site.js loads this script there only for a member, or when "כניסה"
+  // is pressed - and then opens it through window.MoovidosBoard).
+  var FORUM = !!document.getElementById("board");
+  var FORUM_PAGE = FORUM ? "" : "forum.html";       // what a link into the forum starts with
   // Inside a frame of another site the board does not run: there, presses could be led to its buttons unseen.
   try { if (window.top !== window.self && window.top.location.origin !== location.origin) { throw 0; } }
-  catch (e) { document.documentElement.hidden = true; return; }
+  catch (e) { if (FORUM) { document.documentElement.hidden = true; } return; }
 
   var esc = window.BoardText.esc;
   var LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
@@ -149,10 +154,14 @@
     return mem;
   })();
   function remember() { memory.active = Date.now(); store.set(MEMORY, JSON.stringify(memory)); }
-  remember();
+  if (FORUM) { remember(); }       // a visit of the forum; the site's other pages are not one
+  // the top bar's own "כניסה" (the page's markup): what a visitor sees there. A member's is hidden until he is known.
+  var GUEST = document.getElementById("user").innerHTML;
+  if (store.get(TOKEN)) { document.getElementById("user").setAttribute("data-pending", ""); }
 
   /* ---------- helpers ---------- */
-  function icon(id, more) { return '<svg class="mi' + (more ? " " + more : "") + '" aria-hidden="true"><use href="#m-' + id + '"/></svg>'; }
+  // the icons are one file for every page of the site (written by cloud/board/scripts/icons.mjs)
+  function icon(id, more) { return '<svg class="mi' + (more ? " " + more : "") + '" aria-hidden="true"><use href="assets/board-icons.svg#m-' + id + '"/></svg>'; }
   function name(value) { return "<bdi>" + esc(value) + "</bdi>"; }
   function initial(value) { return Array.from(String(value).replace(/[\s.,'"״׳_-]/g, ""))[0] || ""; }
   function ago(ts) {
@@ -422,6 +431,7 @@
   }
   /** Loads what the address asks for and draws the page. `quiet`: without the loading line (a refresh in place). */
   function show(quiet) {
+    if (!FORUM) { renderUser(); return Promise.resolve(); }      // another page of the site: only its top bar
     var route = parseRoute(), work, needsUser = route.view === "account" || route.view === "saved" || route.view === "admin" || !!route.filter;
     closeFloat();
     if (needsUser && !state.me) {                 // a place of signed-in users: the list, and the sign-in dialog over it
@@ -521,17 +531,22 @@
     if (!store.get(TOKEN)) { return Promise.resolve(); }
     return api("GET", "/me").then(took, function (error) { if (error.code !== "expired") { throw error; } });
   }
-
-  /* ---------- the account, in the top bar ---------- */
-  function renderUser() {
-    var el = document.getElementById("user");
-    document.getElementById("board").setAttribute("data-me", state.me ? "1" : "");
-    if (!state.config) { el.innerHTML = ""; return; }
-    if (!state.me) {
-      el.innerHTML = '<button type="button" class="mb mb--text" data-act="auth" data-tab="login">כניסה</button>' +
-        '<button type="button" class="mb mb--filled" data-act="auth" data-tab="register">הרשמה</button>';
-      return;
+  /** The board's settings (Google's client, the limits, the key of the notifications): asked once, when first needed. */
+  var configuring = null;
+  function configure() {
+    if (!configuring) {
+      configuring = API == null ? Promise.reject(failure("not_configured")) : api("GET", "/config").then(function (config) { state.config = config; });
+      configuring.catch(function () { configuring = null; });          // a failure is asked again the next time
     }
+    return configuring;
+  }
+
+  /* ---------- the account, in the top bar (the site's own top bar, on every page) ---------- */
+  function renderUser() {
+    var el = document.getElementById("user"), board = document.getElementById("board");
+    if (board) { board.setAttribute("data-me", state.me ? "1" : ""); }
+    el.removeAttribute("data-pending");                // site.js hides the top bar's "כניסה" of a member until this script knows him
+    if (!state.me) { el.innerHTML = GUEST; return; }
     var me = state.me, unseen = state.unseen, waiting = isMod() ? state.waiting : 0;
     el.innerHTML = '<button type="button" class="ib" data-act="bell" aria-haspopup="true" aria-expanded="false" title="התראות" aria-label="התראות' +
         (unseen ? ": " + unseen + " שלא נקראו" : "") + '">' + icon(unseen ? "notifications-fill" : "notifications") + (unseen ? '<span class="counter">' + unseen + "</span>" : "") + "</button>" +
@@ -588,7 +603,7 @@
   }
   function bellPanel() {
     var rows = state.notes.map(function (note) {
-      return '<a class="note' + (note.seen ? "" : " note--new") + '" href="#t=' + Number(note.topic) + (note.post ? "&p=" + Number(note.post) : "") + '">' +
+      return '<a class="note' + (note.seen ? "" : " note--new") + '" href="' + FORUM_PAGE + '#t=' + Number(note.topic) + (note.post ? "&p=" + Number(note.post) : "") + '">' +
         icon(NOTE_ICON[note.kind] || "notifications") + "<div><b>" + noteText(note) + "</b><span>" + ago(note.at) + "</span></div></a>";
     }).join("");
     return '<div class="menu__title"><span>התראות</span>' +
@@ -600,10 +615,10 @@
     return '<div class="menu__head">' + face(me) + "<div><b>" + name(me.name) + "</b><span>" +
         (me.admin ? "יוצר מובידוס" : me.mod ? "מנהל" : me.google ? "מחוברים עם Google" : "מחוברים בשם ובסיסמה") + "</span></div></div>" +
       '<hr class="hr">' +
-      menuLink("#u=" + Number(me.id), "person", "הדף שלי") +
-      menuLink("#me", "settings", "הגדרות החשבון", me.pendingAvatar ? '<span class="lbl lbl--wait">תמונה ממתינה</span>' : "") +
-      menuLink("#saved", "bookmarks", "הודעות ששמרתי") +
-      (isMod() ? menuLink("#admin", "admin-panel-settings", "ניהול", state.waiting ? '<span class="counter">' + state.waiting + "</span>" : "") : "") +
+      menuLink(FORUM_PAGE + "#u=" + Number(me.id), "person", "הדף שלי") +
+      menuLink(FORUM_PAGE + "#me", "settings", "הגדרות החשבון", me.pendingAvatar ? '<span class="lbl lbl--wait">תמונה ממתינה</span>' : "") +
+      menuLink(FORUM_PAGE + "#saved", "bookmarks", "הודעות ששמרתי") +
+      (isMod() ? menuLink(FORUM_PAGE + "#admin", "admin-panel-settings", "ניהול", state.waiting ? '<span class="counter">' + state.waiting + "</span>" : "") : "") +
       '<hr class="hr">' + menuItem("logout", "logout", "יציאה");
   }
 
@@ -855,7 +870,8 @@
     renderModal();
   }
   function openAuth(tab, note) {
-    if (!state.config || state.me) { return; }
+    if (state.me) { return; }
+    if (!state.config) { configure().then(function () { openAuth(tab, note); }, say); return; }
     var box = document.getElementById("auth-notify");
     if (ui.modal === "auth") { ui.authName = value("auth-name"); ui.authMail = value("auth-mail") || ui.authMail; if (box) { ui.authNotify = box.checked; } }      // switching tabs keeps what was typed
     else { ui.authNote = note || ""; ui.authName = ""; ui.authMail = ""; ui.authNotify = true; }
@@ -878,11 +894,18 @@
   }
 
   /* ---------- "Sign in with Google" ---------- */
+  var GSI = "https://accounts.google.com/gsi/client";
   function drawGoogle(tries) {
     var slot = document.getElementById("gsi");
     if (!slot) { return; }
     if (!window.google || !google.accounts || !google.accounts.id) {
-      if ((tries || 0) < 25) { setTimeout(function () { drawGoogle((tries || 0) + 1); }, 200); }
+      if (!document.querySelector('script[src="' + GSI + '"]')) {      // a page that does not load Google's script itself (the site's front page): now
+        var script = document.createElement("script");
+        script.src = GSI;
+        script.async = true;
+        document.head.appendChild(script);
+      }
+      if ((tries || 0) < 50) { setTimeout(function () { drawGoogle((tries || 0) + 1); }, 200); }
       else { slot.textContent = "הכניסה עם Google אינה זמינה כרגע."; }
       return;
     }
@@ -1887,7 +1910,7 @@
       closeFloat();
       pushOff().then(function () { return api("POST", "/auth/logout"); }).catch(function () { /* the session is dropped here anyway */ }).then(function () {
         signedOut();
-        if (ui.view !== "list" && ui.view !== "topic" && ui.view !== "user" && ui.view !== "search") { location.hash = ""; return null; }
+        if (FORUM && ui.view !== "list" && ui.view !== "topic" && ui.view !== "user" && ui.view !== "search") { location.hash = ""; return null; }
         return show();
       });
     },
@@ -2341,7 +2364,7 @@
     var link = event.target.closest("a[href^='#']");
     if (link) {
       closeFloat();
-      if (link.getAttribute("href") === (location.hash || "#")) { event.preventDefault(); moved(); }      // the place one is already at: again
+      if (FORUM && link.getAttribute("href") === (location.hash || "#")) { event.preventDefault(); moved(); }      // the place one is already at: again
     }
   });
   document.addEventListener("change", function (event) {
@@ -2371,7 +2394,6 @@
   var scrolling = 0;
   window.addEventListener("scroll", function () {            // reading on: the point reached moves with the screen
     ui.active = Date.now();
-    document.body.classList.toggle("is-scrolled", window.pageYOffset > 8);      // the top bar takes its tone
     closeFloat();
     clearTimeout(scrolling);
     scrolling = setTimeout(reached, 150);
@@ -2438,7 +2460,7 @@
     window.addEventListener("pointercancel", letGo);
   }
   document.addEventListener("pointerdown", function (event) { ui.active = Date.now(); ink(event); }, { passive: true });
-  window.addEventListener("hashchange", moved);
+  if (FORUM) { window.addEventListener("hashchange", moved); }      // on the site's other pages the address is theirs
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) { saveRead(true); return; }           // leaving the tab: how far he got is kept
     var typing = document.activeElement && /^(TEXTAREA|INPUT|SELECT)$/.test(document.activeElement.tagName);
@@ -2449,7 +2471,8 @@
   /** Once a minute, while the page is in front and in use: is there something new? The bell, and the place that is open. */
   function pulse() {
     if (document.hidden || !state.config || ui.modal || Date.now() - ui.active > 30 * MIN) { return; }
-    if (["list", "topic", "search", "saved", "user", "account", "admin"].indexOf(ui.view) === -1) { return; }
+    if (["list", "topic", "search", "saved", "user", "account", "admin", "home"].indexOf(ui.view) === -1) { return; }
+    if (ui.view === "home" && !state.me) { return; }          // another page of the site: only the bell, which a visitor has not
     var path = "/pulse";
     if (ui.view === "topic" && state.current) {
       var posts = state.current.posts;
@@ -2478,13 +2501,18 @@
   setInterval(function () { if (ui.view === "topic" && Date.now() < ui.liveUntil) { pulse(); } }, 10000);
 
   function boot() {
+    if (!FORUM) {                     // another page of the site: a member's bell and menu; a visitor costs the board nothing
+      ui.view = "home";
+      if (!store.get(TOKEN)) { return; }              // the "כניסה" of the page's markup stays as it is
+      configure().then(refreshMe).then(renderUser, renderUser);
+      return;
+    }
     if (API == null) { ui.view = "failed"; ui.failure = { code: "not_configured" }; state.config = null; render(); return; }
     if (!window.crypto || !crypto.subtle) { ui.view = "failed"; ui.failure = { code: "server" }; render(); return; }
-    api("GET", "/config").then(function (config) {
-      state.config = config;
-      return refreshMe();
-    }).then(function () { return show(); }, function (error) { ui.view = "failed"; ui.failure = error; render(); })
+    configure().then(refreshMe).then(function () { return show(); }, function (error) { ui.view = "failed"; ui.failure = error; render(); })
       .then(function () { if (ui.view === "topic") { land(); } });
   }
   boot();
+  // site.js loads this script on the site's other pages when "כניסה" is pressed there, and then opens it through this
+  window.MoovidosBoard = { auth: function (tab) { openAuth(tab); } };
 })();

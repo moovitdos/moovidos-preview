@@ -170,7 +170,15 @@ strong { font-weight: 600; }
 .nav a { color: var(--sub); text-decoration: none; }
 .nav a:hover, .nav a[aria-current="true"] { color: var(--ink); }
 .top .btn { padding: 9px 14px; font-size: 15px; }
-@media (max-width: 720px) { .nav { display: none; } .top .btn { margin-inline-start: auto; } }
+/* the forum's account, in the top bar of every page: a visitor's "כניסה" is the page's own markup; for a member
+   board.js draws the bell and the account's menu (board.css), and until it knows him the "כניסה" is not shown */
+.top__user { display: flex; align-items: center; gap: 4px; margin-inline-end: -12px; }      /* 12px from the download button */
+.top__user[data-pending] { visibility: hidden; }
+/* measured with the account in the bar (4.10.2026): next to a member's bell and picture the menu's links wrap at
+   800px (not at 820px); next to a visitor's "כניסה" they fit at 800px and are squeezed at 721px. At 320px a member's
+   bar overflowed by a few pixels: at 360px and less the logo stands without the name of the site. */
+@media (max-width: 840px) { .nav { display: none; } .top__user { margin-inline-start: auto; } }
+@media (max-width: 360px) { .top .brand span { display: none; } }
 
 /* ---------- hero ---------- */
 .hero { padding-block: 72px 64px; overflow: hidden; } /* hidden: the line map runs past the hero's edges */
