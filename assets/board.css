@@ -459,17 +459,16 @@ a.who:hover { text-decoration: underline; }
    who replied last and when, and the opening words of what he wrote - beside the title where there is room,
    under it where there is not. What its reader did not see yet is told by the colour of the bubble. */
 .tease {
-  grid-row: 2; grid-column: 2 / 4; justify-self: start; display: grid; min-width: 0; max-width: 100%; padding: 5px 12px 6px;
+  grid-row: 2; grid-column: 2 / 4; justify-self: start; display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; max-width: 100%; padding: 5px 12px 6px;
   border-radius: 16px; border-start-start-radius: 4px; background: var(--md-fill); font-size: 13.5px; line-height: 20px; color: var(--md-on-surface-variant);
 }
 .trow:hover .tease { background: var(--md-fill-high); }
 .tease__by { display: flex; align-items: center; gap: 5px; min-width: 0; font-size: 12.5px; line-height: 18px; white-space: nowrap; }
 .tease__by bdi { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 500; color: var(--md-on-surface); }
 .tease__by .avatar { flex: none; width: 16px; height: 16px; font-size: 9.5px; }
-.tease__line { display: flex; align-items: baseline; gap: 12px; min-width: 0; }      /* one line of the reply, and at its end - the bubble's corner - when */
-.tease__text { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--md-on-surface); }
+.tease__when { flex: none; margin-inline-start: auto; padding-inline-start: 12px; font-size: 12px; }      /* at the end of the name's line */
+.tease__text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--md-on-surface); }      /* one line of the reply */
 .tease__text .mi { width: 16px; height: 16px; margin-inline-end: 4px; vertical-align: -3px; }
-.tease__when { flex: none; font-size: 12px; line-height: 18px; white-space: nowrap; }
 .tease--first .tease__text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; overflow-wrap: anywhere; color: var(--md-on-surface-variant); }
 .trow--unread .tease { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }      /* the quiet tone of a chosen row: a list of unread topics is not a wall of blue */
 .trow--unread .tease__by bdi, .trow--unread .tease__text { color: var(--md-on-surface); }

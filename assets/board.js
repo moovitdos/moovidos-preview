@@ -1098,16 +1098,18 @@
   }
   /** The latest message of a topic as a small bubble, like the ones of the conversation itself: who replied last
    *  and when, and the opening words of what he wrote. A topic nobody replied to yet shows the opening words of its
-   *  first message. "" where the list did not bring it (a search; a topic that waits). */
+   *  first message. "" where the list did not bring it (a search; a topic that waits).
+   *  The bubble says who and when without the words "תגובה אחרונה מאת" (the owner: no need for them) - a screen
+   *  reader, which does not see a bubble, still hears them. */
   function teaser(topic) {
     var last = topic.last;
     if (!last || last.text == null) { return ""; }
     var words = state.ignores[last.user.id] ? "הודעה של משתמש שבחרתם להתעלם ממנו."       // his words are folded in the topic, and not shown here either
       : last.text ? esc(last.text) : icon("image") + "תמונה";
-    // the time stands at the end of the bubble's last line, as in a bubble of a chat: the first line is the name's
     if (!topic.replies) { return '<div class="tease tease--first"><span class="tease__text">' + words + "</span></div>"; }
-    return '<div class="tease"><span class="tease__by"><span>תגובה אחרונה מאת</span>' + face(last.user, "xs") + name(last.user.name) + "</span>" +
-      '<span class="tease__line"><span class="tease__text">' + words + '</span><span class="tease__when">' + agoIn(topic.lastAt) + "</span></span></div>";
+    // the name at the beginning of the first line and the time at its end, as in a list of chats; under them, the words
+    return '<div class="tease"><span class="tease__by"><span class="sr-only">תגובה אחרונה מאת </span>' + face(last.user, "xs") + name(last.user.name) +
+      '<span class="tease__when">' + agoIn(topic.lastAt) + '</span></span><span class="tease__text">' + words + "</span></div>";
   }
   function topicRow(topic, plain, kept) {
     var fresh = isNew(topic), n = state.me ? topic.unread : 0;
