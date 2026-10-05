@@ -475,7 +475,7 @@
   }
   function listKey(route) { return [route.kind, route.filter, route.tag, ui.sort].join("|"); }
   function listPath(route, offset) {
-    var parts = ["sort=" + ui.sort];
+    var parts = ["sort=" + ui.sort, "last=1"];      // last: each topic with its latest message (who, and its opening words)
     if (route.kind) { parts.push("kind=" + route.kind); }
     if (route.filter) { parts.push("filter=" + route.filter); }
     if (route.tag) { parts.push("tag=" + encodeURIComponent(route.tag)); }
@@ -1089,29 +1089,44 @@
     if (state.me) { return topic.unread > 0 && topic.watch !== -1; }
     return topic.lastAt > (memory.read[topic.id] || memory.seen[topic.id] || memory.last);
   }
+  /** "לפני שעה", or "ב-3.10.2026" for what is older than a week: a time as it stands after a name. */
+  function agoIn(ts) { var time = ago(ts); return /^\d/.test(time) ? "ב-" + time : time; }
   /** "תגובה אחרונה מאת … לפני …": who wrote last in a topic and when - what tells a reader whether he saw it. */
   function lastLine(topic) {
-    var time = ago(topic.lastAt);
-    if (!topic.replies || !topic.lastName) { return time; }
-    return "תגובה אחרונה מאת " + name(topic.lastName) + " " + (/^\d/.test(time) ? "ב-" + time : time);
+    if (!topic.replies || !topic.lastName) { return ago(topic.lastAt); }
+    return "תגובה אחרונה מאת " + name(topic.lastName) + " " + agoIn(topic.lastAt);
+  }
+  /** The latest message of a topic as a small bubble, like the ones of the conversation itself: who replied last
+   *  and when, and the opening words of what he wrote. A topic nobody replied to yet shows the opening words of its
+   *  first message. "" where the list did not bring it (a search; a topic that waits). */
+  function teaser(topic) {
+    var last = topic.last;
+    if (!last || last.text == null) { return ""; }
+    var words = state.ignores[last.user.id] ? "הודעה של משתמש שבחרתם להתעלם ממנו."       // his words are folded in the topic, and not shown here either
+      : last.text ? esc(last.text) : icon("image") + "תמונה";
+    return '<div class="tease' + (topic.replies ? "" : " tease--first") + '">' +
+      (topic.replies ? '<span class="tease__by"><span>תגובה אחרונה מאת</span>' + face(last.user, "xs") + name(last.user.name) + "<span>" + agoIn(topic.lastAt) + "</span></span>" : "") +
+      '<span class="tease__text">' + words + "</span></div>";
   }
   function topicRow(topic, plain, kept) {
     var fresh = isNew(topic), n = state.me ? topic.unread : 0;
     var news = n && topic.watch !== -1 ? '<span class="lbl lbl--new">' + (n === 1 ? "הודעה חדשה" : n + " חדשות") + "</span>"
       : !state.me && fresh ? '<span class="lbl lbl--new">חדש</span>' : "";
     var voted = !!(state.list && state.list.voted[topic.id]);
+    var tease = plain ? "" : teaser(topic);
     var vote = plain || topic.kind === "question" || topic.state !== "ok" ? "" :
       '<button type="button" class="chip" data-act="vote" data-id="' + topic.id + '" aria-pressed="' + voted + '" title="' + voteLabel(topic) +
         '" aria-label="' + voteLabel(topic) + ": " + topic.votes + '">' + icon("arrow-upward") + '<span class="chip__n">' + topic.votes + "</span></button>";
-    return '<li class="item trow' + (fresh ? " trow--unread" : "") + (topic.watch === -1 ? " trow--muted" : "") + '">' + kindCircle(topic.kind) + "<div>" +
+    return '<li class="item trow' + (fresh ? " trow--unread" : "") + (topic.watch === -1 ? " trow--muted" : "") + (tease ? " trow--tease" : "") + '">' + kindCircle(topic.kind) + "<div>" +
       '<a class="trow__title" href="#t=' + topic.id + '">' +
         (topic.pinned ? icon("push-pin-fill") + '<span class="sr-only">נעוץ: </span>' : "") + (topic.locked ? icon("lock") + '<span class="sr-only">נעול: </span>' : "") +
         // the words of the title stand above the row's own link: the pointer resting on them shows the first message (openPeek)
         '<span class="sr-only">' + (KINDS[topic.kind] || "") + ': </span><span class="trow__words" data-peek="' + topic.id + '">' + name(topic.title) + "</span></a>" +
       '<div class="trow__meta">' + stateLabels(topic) + news + (kept && kept[topic.id] ? '<span class="lbl">' + icon("edit") + "טיוטה</span>" : "") +
         (topic.poll ? '<span class="lbl">' + icon("ballot") + "סקר</span>" : "") + byline(topic.author) + DOT +
-        '<span class="trow__last">' + lastLine(topic) + "</span>" +
-        (topic.tags || []).map(function (tag) { return '<a class="tagchip" href="#tag=' + encodeURIComponent(tag) + '">#' + name(tag) + "</a>"; }).join("") + "</div></div>" +
+        // with the bubble of the latest message beside it, this line says when the topic was opened; without it, who wrote last
+        (tease ? "<span>" + ago(topic.created) + "</span>" : '<span class="trow__last">' + lastLine(topic) + "</span>") +
+        (topic.tags || []).map(function (tag) { return '<a class="tagchip" href="#tag=' + encodeURIComponent(tag) + '">#' + name(tag) + "</a>"; }).join("") + "</div></div>" + tease +
       '<div class="trow__end">' + vote + '<span class="count" title="תגובות">' + icon("chat-bubble") + "<span>" + topic.replies +
         '</span><span class="sr-only"> תגובות</span></span></div></li>';
   }
