@@ -466,9 +466,11 @@ a.who:hover { text-decoration: underline; }
 .tease__by { display: flex; align-items: center; gap: 5px; min-width: 0; font-size: 12.5px; line-height: 18px; white-space: nowrap; }
 .tease__by bdi { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 500; color: var(--md-on-surface); }
 .tease__by .avatar { flex: none; width: 16px; height: 16px; font-size: 9.5px; }
-.tease__text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; overflow-wrap: anywhere; color: var(--md-on-surface); }
+.tease__line { display: flex; align-items: baseline; gap: 12px; min-width: 0; }      /* one line of the reply, and at its end - the bubble's corner - when */
+.tease__text { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--md-on-surface); }
 .tease__text .mi { width: 16px; height: 16px; margin-inline-end: 4px; vertical-align: -3px; }
-.tease--first .tease__text { -webkit-line-clamp: 2; color: var(--md-on-surface-variant); }
+.tease__when { flex: none; font-size: 12px; line-height: 18px; white-space: nowrap; }
+.tease--first .tease__text { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; overflow-wrap: anywhere; color: var(--md-on-surface-variant); }
 .trow--unread .tease { background: var(--md-secondary-container); color: var(--md-on-secondary-container); }      /* the quiet tone of a chosen row: a list of unread topics is not a wall of blue */
 .trow--unread .tease__by bdi, .trow--unread .tease__text { color: var(--md-on-surface); }
 .trow--unread .tease__text { font-weight: 500; }

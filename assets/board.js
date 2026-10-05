@@ -1104,9 +1104,10 @@
     if (!last || last.text == null) { return ""; }
     var words = state.ignores[last.user.id] ? "הודעה של משתמש שבחרתם להתעלם ממנו."       // his words are folded in the topic, and not shown here either
       : last.text ? esc(last.text) : icon("image") + "תמונה";
-    return '<div class="tease' + (topic.replies ? "" : " tease--first") + '">' +
-      (topic.replies ? '<span class="tease__by"><span>תגובה אחרונה מאת</span>' + face(last.user, "xs") + name(last.user.name) + "<span>" + agoIn(topic.lastAt) + "</span></span>" : "") +
-      '<span class="tease__text">' + words + "</span></div>";
+    // the time stands at the end of the bubble's last line, as in a bubble of a chat: the first line is the name's
+    if (!topic.replies) { return '<div class="tease tease--first"><span class="tease__text">' + words + "</span></div>"; }
+    return '<div class="tease"><span class="tease__by"><span>תגובה אחרונה מאת</span>' + face(last.user, "xs") + name(last.user.name) + "</span>" +
+      '<span class="tease__line"><span class="tease__text">' + words + '</span><span class="tease__when">' + agoIn(topic.lastAt) + "</span></span></div>";
   }
   function topicRow(topic, plain, kept) {
     var fresh = isNew(topic), n = state.me ? topic.unread : 0;
